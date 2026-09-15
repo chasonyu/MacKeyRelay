@@ -1,0 +1,25 @@
+{
+  "name": "@chasonyu/mackeyrelay",
+  "version": "0.1.0",
+  "description": "Forward keyboard shortcuts to macOS Screen Sharing without triggering local hotkeys",
+  "license": "MIT",
+  "bin": {
+    "mackeyrelay": "bin/mackeyrelay.js"
+  },
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js"
+  },
+  "files": [
+    "bin/mackeyrelay.js",
+    "scripts/postinstall.js"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
