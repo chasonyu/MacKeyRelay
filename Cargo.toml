@@ -1,0 +1,13 @@
+[package]
+name = "mackeyrelay"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+description = "Focus-scoped keyboard forwarding into Apple's Screen Sharing client"
+license = "MIT"
+publish = false
+
+[profile.release]
+panic = "abort"
+lto = true
+strip = "debuginfo"
