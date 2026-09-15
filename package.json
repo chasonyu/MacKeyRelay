@@ -1,6 +1,6 @@
 {
   "name": "@chasonyu/mackeyrelay",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Forward keyboard shortcuts to macOS Screen Sharing without triggering local hotkeys",
   "license": "MIT",
   "bin": {
