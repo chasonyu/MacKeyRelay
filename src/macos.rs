@@ -370,7 +370,7 @@ pub fn start(options: Options) -> Result<(), String> {
             return Ok(());
         }
         if !ax || !listen || (!options.dry_run && !post) {
-            return Err("缺少 macOS 隐私权限。请不要用 sudo；从同一终端执行 ./target/release/mackeyrelay --request-permissions，按系统提示授权启动应用或本程序，然后重启该终端并运行 --check。本次没有请求授权或启动拦截。".into());
+            return Err("缺少 macOS 隐私权限。请不要用 sudo；执行 mackeyrelay --request-permissions，按系统提示授权启动应用或本程序，然后重启该终端并运行 mackeyrelay --check。本次没有请求授权或启动拦截。".into());
         }
         STOP.store(false, Ordering::Relaxed);
         let source = Owned(CGEventSourceCreate(-1));

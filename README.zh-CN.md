@@ -25,12 +25,17 @@ MacKeyRelay 捕获本地键盘事件，在远程会话窗口聚焦时直接投�
 
 其他 macOS 版本、屏幕共享构建和 Intel Mac 未经验证。
 
-## 构建
+## 安装
 
-需要 macOS、Rust 1.85+ 和 Xcode Command Line Tools。
+```sh
+npm install -g @chasonyu/mackeyrelay
+```
+
+或从源码构建（需要 Rust 1.85+ 和 Xcode Command Line Tools）：
 
 ```sh
 cargo build --release
+# 下方命令中的 mackeyrelay 替换为 ./target/release/mackeyrelay
 ```
 
 ## 用法
@@ -39,53 +44,53 @@ cargo build --release
 
 ```sh
 # 1. 请求系统权限
-./target/release/mackeyrelay --request-permissions
+mackeyrelay --request-permissions
 
-# 2. 验证权限和当前窗口
-./target/release/mackeyrelay --check
+# 2. 验证权限
+mackeyrelay --check
 
-# 3. 运行
-./target/release/mackeyrelay --run
+# 3. 前台运行
+mackeyrelay --run
+
+# 或以后台服务运行（launchd）
+mackeyrelay start
+mackeyrelay stop
+mackeyrelay status
 ```
 
-第 1 步后，在 **系统设置 → 隐私与安全性** 的 **辅助功能** 和 **输入监控** 中允许对应应用。授权可能归属启动终端或程序本身，以系统显示为准。
+第 1 步后，打开 **系统设置 → 隐私与安全性** 的 **辅助功能** 和 **输入监控**，允许终端或程序本身。然后**重启终端**再运行 `--check`。
 
-第 2 步应显示 `accessibility=true`、`input-monitoring=true`、`post-events=true`。不需要完全磁盘访问。
-
-**紧急停止：`Control + Option + Shift + Escape`**——本地保留，不转发。也可用 Ctrl+C 或 SIGTERM。
+第 2 步应显示 `accessibility=true`、`input-monitoring=true`、`post-events=true`。
 
 ### 后台服务
 
-尚未将程序加入 PATH 时，用 `./target/release/mackeyrelay` 替换下方的 `mackeyrelay`。
-
 | 命令 | 行为 |
 |---|---|
-| `mackeyrelay start` | 启动当前用户的后台服务，短暂检查就绪后返回 |
-| `mackeyrelay stop` | 停止服务，不改变登录自启动设置 |
-| `mackeyrelay status` | 显示服务状态和最近一次后台启动的诊断结果 |
-| `mackeyrelay logs` | 显示最近最多 80 行日志 |
-| `mackeyrelay autostart enable` | 开启下次图形桌面登录时的默认转发，不立即启动 |
-| `mackeyrelay autostart disable` | 移除登录配置，不停止当前服务 |
+| `start [选项]` | 启动 launchd 后台服务 |
+| `stop` | 停止后台服务 |
+| `status` | 查看服务状态和上次权限状态 |
+| `logs` | 显示最近 80 行日志 |
+| `autostart enable` | 登录时自动启动 |
+| `autostart disable` | 取消登录自动启动 |
 
-`start` 支持 `--window-title`、`--duration` 和 `--dry-run`。更换选项或更新程序前先停止服务，不要同时运行前台拦截。登录启动使用默认选项，不继承上次手动启动的临时参数。
+后台服务默认执行 `--run`。可向 `start` 传递额外选项：
 
-服务将程序复制到固定位置 `~/Library/Application Support/MacKeyRelay`。后台权限归属可能与终端不同，必要时在系统设置中为该位置的程序授予辅助功能和输入监控。`status` 显示最近一次后台启动的结果，不是实时权限检查。
+```sh
+mackeyrelay start --window-title 'MacBook'
+```
 
-关闭终端不影响后台服务。紧急退出、失败和到时退出均不会触发自动重启；无法确认就绪时会卸载任务。`OS_REASON_ENDPOINTSECURITY` 表示终端安全系统阻止执行，需要通过管理员授权处理。
-
-日志保存在同一运行目录，手动启动会清空旧日志，查看时最多读取 64 KiB。可选的登录配置位于 `~/Library/LaunchAgents/io.mackeyrelay.agent.plist`。
-
-### 选项
+### 前台选项
 
 | 选项 | 行为 |
 |---|---|
-| （无）/ `--check` | 检查权限和当前窗口，不捕获 |
-| `--request-permissions` | 请求系统授权后退出 |
+| （无）/ `--check` | 检查权限和当前窗口 |
 | `--run` | 远程窗口聚焦时捕获并转发 |
 | `--dry-run` | 只观察路由，不拦截不注入 |
 | `--window-title TEXT` | 要求焦点窗口标题包含 TEXT（区分大小写） |
 | `--duration SECONDS` | 到时自动停止 |
-| `--help` | 显示帮助 |
+| `--request-permissions` | 请求系统授权后退出 |
+
+**紧急停止：`Control + Option + Shift + Escape`**——本地保留，不转发。也可用 Ctrl+C 或 SIGTERM。
 
 ## 原理
 

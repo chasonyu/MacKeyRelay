@@ -25,12 +25,17 @@ It uses public macOS event APIs (`CGEventTap`, `CGEventPostToPid`) — no patchi
 
 Other macOS versions, Screen Sharing builds, and Intel Macs have not been validated.
 
-## Build
+## Install
 
-Requires macOS, Rust 1.85+, and Xcode Command Line Tools.
+```sh
+npm install -g @chasonyu/mackeyrelay
+```
+
+Or build from source (requires Rust 1.85+ and Xcode Command Line Tools):
 
 ```sh
 cargo build --release
+# use ./target/release/mackeyrelay instead of mackeyrelay below
 ```
 
 ## Usage
@@ -39,53 +44,53 @@ Run as your normal desktop user. **Do not use `sudo`** — root does not replace
 
 ```sh
 # 1. Request system permissions
-./target/release/mackeyrelay --request-permissions
+mackeyrelay --request-permissions
 
-# 2. Verify permissions and focused window
-./target/release/mackeyrelay --check
+# 2. Verify permissions
+mackeyrelay --check
 
-# 3. Run
-./target/release/mackeyrelay --run
+# 3. Run in foreground
+mackeyrelay --run
+
+# Or run as a background service (launchd)
+mackeyrelay start
+mackeyrelay stop
+mackeyrelay status
 ```
 
-After step 1, check **System Settings → Privacy & Security → Accessibility** and **Input Monitoring**. Consent may be attributed to the launching terminal or the executable — use the name macOS shows.
+After step 1, open **System Settings → Privacy & Security → Accessibility** and **Input Monitoring**, and allow the terminal or the binary itself. Then **restart the terminal** and run `--check`.
 
-Step 2 should report `accessibility=true`, `input-monitoring=true`, `post-events=true`. Full Disk Access is not required.
-
-**Emergency stop: `Control + Option + Shift + Escape`** — reserved locally, not forwarded. Also stop via Ctrl+C or SIGTERM.
+Step 2 should report `accessibility=true`, `input-monitoring=true`, `post-events=true`.
 
 ### Background service
 
-Use `./target/release/mackeyrelay` in place of `mackeyrelay` if it is not on your PATH.
-
 | Command | Behavior |
 |---|---|
-| `mackeyrelay start` | Start a per-user background service and return after a readiness check |
-| `mackeyrelay stop` | Stop the service; leave the login preference unchanged |
-| `mackeyrelay status` | Show service state and diagnostics from the last background attempt |
-| `mackeyrelay logs` | Show up to 80 recent log lines |
-| `mackeyrelay autostart enable` | Enable default forwarding at the next GUI login; do not start now |
-| `mackeyrelay autostart disable` | Remove login registration; do not stop the current service |
+| `start [OPTIONS]` | Start as a launchd background service |
+| `stop` | Stop the background service |
+| `status` | Show service state and last permission status |
+| `logs` | Show last 80 log lines |
+| `autostart enable` | Start automatically on login |
+| `autostart disable` | Do not start on login |
 
-`start` accepts `--window-title`, `--duration`, and `--dry-run`. Stop before changing options or updating the executable. Do not run foreground capture simultaneously. Login startup uses default options, not previous manual-start options.
+The background service runs `--run` by default. Pass extra options to `start`:
 
-The service uses a stable executable copy in `~/Library/Application Support/MacKeyRelay`. Background permission attribution can differ from terminal launches: grant Accessibility and Input Monitoring to that installed executable when needed. `status` reports the last attempt, not a live permission check.
+```sh
+mackeyrelay start --window-title 'MacBook'
+```
 
-Closing the terminal does not stop the service. Emergency stops, failures and timed exits do not trigger automatic restarts. An unconfirmed startup is unloaded. `OS_REASON_ENDPOINTSECURITY` indicates an endpoint-security execution block requiring administrator approval.
-
-Logs are stored in the same support directory. Manual starts reset them; `logs` reads at most 64 KiB. The optional login configuration is `~/Library/LaunchAgents/io.mackeyrelay.agent.plist`.
-
-### Options
+### Foreground options
 
 | Option | Behavior |
 |---|---|
-| (none) / `--check` | Check permissions and focused window; no capture |
-| `--request-permissions` | Request system consent and exit |
+| (none) / `--check` | Check permissions and focused window |
 | `--run` | Capture and forward while a remote window is focused |
 | `--dry-run` | Observe routing without suppressing or injecting events |
 | `--window-title TEXT` | Require focused window title to contain TEXT (case-sensitive) |
 | `--duration SECONDS` | Stop after the specified interval |
-| `--help` | Show command help |
+| `--request-permissions` | Request system consent and exit |
+
+**Emergency stop: `Control + Option + Shift + Escape`** — reserved locally, not forwarded. Also stop via Ctrl+C or SIGTERM.
 
 ## How it works
 
