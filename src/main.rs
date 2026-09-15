@@ -3,6 +3,8 @@ mod engine;
 mod ffi;
 #[cfg(target_os = "macos")]
 mod macos;
+#[cfg(target_os = "macos")]
+mod service;
 
 #[derive(Default)]
 pub struct Options {
@@ -12,9 +14,9 @@ pub struct Options {
     pub window_title: Option<String>,
     pub duration: Option<f64>,
 }
-fn parse() -> Result<Options, String> {
+fn parse_args(args: impl Iterator<Item = String>) -> Result<Options, String> {
     let mut opt = Options::default();
-    let mut args = std::env::args().skip(1);
+    let mut args = args;
     while let Some(a) = args.next() {
         match a.as_str() {
             "--check" => {}
@@ -43,7 +45,7 @@ fn parse() -> Result<Options, String> {
                 opt.duration = Some(n);
             }
             "--help" | "-h" => {
-                println!("mackeyrelay\n\nDefault / --check: read-only permissions and focused-window status\n--request-permissions: request macOS consent, then exit (never starts capture)\n--run: capture and forward keyboard while a remote window is focused\n--dry-run: observe routing only; do not suppress or inject events\n--window-title TEXT: require focused window title to contain TEXT\n--duration SECONDS: automatically stop after this interval\n\nEmergency stop: Control + Option + Shift + Escape\nOnly keyboard keyDown/keyUp/flagsChanged; media/system events are excluded.");
+                println!("mackeyrelay\n\nstart [OPTIONS]: start a background service\nstop: stop the background service\nstatus: show service and last permission status\nautostart enable|disable: configure next-login startup\nlogs: show the last 80 log lines\n\nDefault / --check: read-only permissions and focused-window status\n--request-permissions: request macOS consent, then exit (never starts capture)\n--run: capture and forward keyboard while a remote window is focused\n--dry-run: observe routing only; do not suppress or inject events\n--window-title TEXT: require focused window title to contain TEXT\n--duration SECONDS: automatically stop after this interval\n\nEmergency stop: Control + Option + Shift + Escape\nOnly keyboard keyDown/keyUp/flagsChanged; media/system events are excluded.");
                 std::process::exit(0);
             }
             _ => return Err(format!("unknown argument: {a}")),
@@ -55,7 +57,21 @@ fn parse() -> Result<Options, String> {
     Ok(opt)
 }
 fn main() {
-    let result: Result<(), String> = parse().and_then(|o| {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    #[cfg(target_os = "macos")]
+    if args.first().is_some_and(|a| {
+        matches!(
+            a.as_str(),
+            "start" | "stop" | "status" | "autostart" | "logs"
+        )
+    }) {
+        if let Err(e) = service::dispatch(&args) {
+            eprintln!("error: {e}");
+            std::process::exit(1);
+        }
+        return;
+    }
+    let result: Result<(), String> = parse_args(args.into_iter()).and_then(|o| {
         #[cfg(target_os = "macos")]
         {
             macos::start(o)

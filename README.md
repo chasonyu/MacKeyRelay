@@ -54,6 +54,27 @@ Step 2 should report `accessibility=true`, `input-monitoring=true`, `post-events
 
 **Emergency stop: `Control + Option + Shift + Escape`** — reserved locally, not forwarded. Also stop via Ctrl+C or SIGTERM.
 
+### Background service
+
+Use `./target/release/mackeyrelay` in place of `mackeyrelay` if it is not on your PATH.
+
+| Command | Behavior |
+|---|---|
+| `mackeyrelay start` | Start a per-user background service and return after a readiness check |
+| `mackeyrelay stop` | Stop the service; leave the login preference unchanged |
+| `mackeyrelay status` | Show service state and diagnostics from the last background attempt |
+| `mackeyrelay logs` | Show up to 80 recent log lines |
+| `mackeyrelay autostart enable` | Enable default forwarding at the next GUI login; do not start now |
+| `mackeyrelay autostart disable` | Remove login registration; do not stop the current service |
+
+`start` accepts `--window-title`, `--duration`, and `--dry-run`. Stop before changing options or updating the executable. Do not run foreground capture simultaneously. Login startup uses default options, not previous manual-start options.
+
+The service uses a stable executable copy in `~/Library/Application Support/MacKeyRelay`. Background permission attribution can differ from terminal launches: grant Accessibility and Input Monitoring to that installed executable when needed. `status` reports the last attempt, not a live permission check.
+
+Closing the terminal does not stop the service. Emergency stops, failures and timed exits do not trigger automatic restarts. An unconfirmed startup is unloaded. `OS_REASON_ENDPOINTSECURITY` indicates an endpoint-security execution block requiring administrator approval.
+
+Logs are stored in the same support directory. Manual starts reset them; `logs` reads at most 64 KiB. The optional login configuration is `~/Library/LaunchAgents/io.mackeyrelay.agent.plist`.
+
 ### Options
 
 | Option | Behavior |

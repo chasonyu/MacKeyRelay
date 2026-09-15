@@ -54,6 +54,27 @@ cargo build --release
 
 **紧急停止：`Control + Option + Shift + Escape`**——本地保留，不转发。也可用 Ctrl+C 或 SIGTERM。
 
+### 后台服务
+
+尚未将程序加入 PATH 时，用 `./target/release/mackeyrelay` 替换下方的 `mackeyrelay`。
+
+| 命令 | 行为 |
+|---|---|
+| `mackeyrelay start` | 启动当前用户的后台服务，短暂检查就绪后返回 |
+| `mackeyrelay stop` | 停止服务，不改变登录自启动设置 |
+| `mackeyrelay status` | 显示服务状态和最近一次后台启动的诊断结果 |
+| `mackeyrelay logs` | 显示最近最多 80 行日志 |
+| `mackeyrelay autostart enable` | 开启下次图形桌面登录时的默认转发，不立即启动 |
+| `mackeyrelay autostart disable` | 移除登录配置，不停止当前服务 |
+
+`start` 支持 `--window-title`、`--duration` 和 `--dry-run`。更换选项或更新程序前先停止服务，不要同时运行前台拦截。登录启动使用默认选项，不继承上次手动启动的临时参数。
+
+服务将程序复制到固定位置 `~/Library/Application Support/MacKeyRelay`。后台权限归属可能与终端不同，必要时在系统设置中为该位置的程序授予辅助功能和输入监控。`status` 显示最近一次后台启动的结果，不是实时权限检查。
+
+关闭终端不影响后台服务。紧急退出、失败和到时退出均不会触发自动重启；无法确认就绪时会卸载任务。`OS_REASON_ENDPOINTSECURITY` 表示终端安全系统阻止执行，需要通过管理员授权处理。
+
+日志保存在同一运行目录，手动启动会清空旧日志，查看时最多读取 64 KiB。可选的登录配置位于 `~/Library/LaunchAgents/io.mackeyrelay.agent.plist`。
+
 ### 选项
 
 | 选项 | 行为 |
